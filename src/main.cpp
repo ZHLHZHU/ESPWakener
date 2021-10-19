@@ -27,6 +27,10 @@ struct Config
   String mqttHost;
   // mqtt port
   uint16_t mqttPort;
+  // mqtt user name
+  String mqttUsername;
+  // mqtt password
+  String mqttPass;
   // mqtt topic
   String mqttTopic;
 } config;
@@ -178,15 +182,10 @@ void mqttReconnect()
   while (!mqtt.connected())
   {
     Serial.print("Attempting MQTT connection...");
-    // Create a random client ID
-    String clientId = "ESP8266Client-";
-    clientId += String(random(0xffff), HEX);
     // Attempt to connect
-    if (mqtt.connect(clientId.c_str()))
+    if (mqtt.connect(deviceName.c_str()))
     {
       Serial.println("connected");
-      // Once connected, publish an announcement...
-      mqtt.publish(config.mqttTopic.c_str(), "👴🏻回来了");
       // ... and resubscribe
       mqtt.subscribe(config.mqttTopic.c_str(), 1);
     }

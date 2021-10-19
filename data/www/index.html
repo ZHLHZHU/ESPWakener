@@ -1,11 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.6/build/pure-min.css"
+        integrity="sha384-Uu6IeWbM+gzNVXJcM9XV3SohHtmWE+3VGi496jvgX1jyvDTXfdK+rfZc8C1Aehk5" crossorigin="anonymous">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Title</title>
+    <title>Wakener Config</title>
 </head>
+
 <body>
-    <h1>HelloWorld!</h1>
+    <div x-data="{
+        form: {
+            stSSID: '',
+            stPASS: '',
+            wolPort: 9,
+            mqttEn: false,
+            mqttHost: '',
+            mqttPort: '',
+            mqttUsername: '',
+            mqttPass: '',
+            mqttTopic: ''
+        }
+
+    }">
+        <div class="pure-u-3-24"></div>
+        <div class="pure-u-20-24">
+            <form class="pure-form pure-form-aligned">
+                <fieldset>
+                    <div class="pure-control-group">
+                        <label for="aligned-name">WiFi SSID</label>
+                        <input type="text" id="aligned-name" placeholder="WiFi SSID" x-model="form.stSSID" />
+                        <!-- <span class="pure-form-message-inline">This is a required field.</span> -->
+                    </div>
+                    <div class="pure-control-group">
+                        <label for="aligned-password">WiFi Password</label>
+                        <input type="password" id="aligned-password" placeholder="WiFi Password" x-model="form.stPASS" />
+                    </div>
+                    <div class="pure-control-group">
+                        <label for="aligned-wol-port">WOL Port(default: 9)</label>
+                        <input type="number" id="aligned-wol-port" x-model="form.wolPort" />
+                    </div>
+                    <div class="pure-control-group">
+                        <label for="aligned-wol-port">MQTT Enable</label>
+                        <input type="checkbox" id="aligned-mqtt-switch" x-model="form.mqttEn">
+                    </div>
+                    <div class="pure-control-group" x-show="form.mqttEn">
+                        <label for="aligned-mqtt-host">MQTT Host</label>
+                        <input type="text" id="aligned-mqtt-host" placeholder="MTQQ Host" />
+                    </div>
+                    <div class="pure-control-group" x-show="form.mqttEn">
+                        <label for="aligned-mqtt-password">MQTT Password</label>
+                        <input type="text" id="aligned-mqtt-password" placeholder="MTQQ Password" x-model="form.mqttPass" />
+                    </div>
+                    <div class="pure-control-group" x-show="form.mqttEn">
+                        <label for="aligned-mqtt-topic">MQTT Topic</label>
+                        <input type="text" id="aligned-mqtt-topic" placeholder="MTQQ Topic" x-model="form.mqttTopic" />
+                    </div>
+                    <div class="pure-controls">
+                        <button class="pure-button pure-button-primary" type="button"
+                            x-on:click="submit">Submit</button>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+        <script type="text/javascript">
+            function submit() {
+                this.form.wolPort++;
+            }
+        </script>
+    </div>
 </body>
+
 </html>
