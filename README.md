@@ -1,4 +1,4 @@
-## MTQQ指令
+## MQTT指令
 ### wake#mac_address
 mac地址支持'-'和':'分隔
 ```
