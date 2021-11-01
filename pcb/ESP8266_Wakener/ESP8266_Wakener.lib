@@ -1,0 +1,19 @@
+EESchema-LIBRARY Version 2.4
+#encoding utf-8
+#
+# slip_switch_MSK-12D19_1P2T
+#
+DEF slip_switch_MSK-12D19_1P2T SW 0 20 Y Y 1 F N
+F0 "SW" 0 0 50 H V C CNN
+F1 "slip_switch_MSK-12D19_1P2T" 0 0 50 H I C CNN
+F2 "" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+DRAW
+S -130 -60 90 -380 0 1 0 N
+X left 1 190 -100 100 L 50 50 1 1 P
+X mid 2 190 -200 100 L 50 50 1 1 P
+X right 3 190 -300 100 L 50 50 1 1 P
+ENDDRAW
+ENDDEF
+#
+#End Library

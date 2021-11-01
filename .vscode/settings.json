@@ -2,6 +2,13 @@
     "files.associations": {
         "string": "cpp",
         "*.tcc": "cpp",
-        "cstring": "cpp"
+        "cstring": "cpp",
+        "atomic": "cpp",
+        "memory": "cpp",
+        "istream": "cpp",
+        "sstream": "cpp",
+        "streambuf": "cpp",
+        "typeinfo": "cpp",
+        "utility": "cpp"
     }
 }

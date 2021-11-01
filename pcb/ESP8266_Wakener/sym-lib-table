@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name ESP8266)(type Legacy)(uri C:/Users/LH/Downloads/kicad-ESP8266/ESP8266.lib)(options "")(descr ""))
+  (lib (name ESP8266_Wakener)(type Legacy)(uri ${KIPRJMOD}/ESP8266_Wakener.lib)(options "")(descr ""))
+)

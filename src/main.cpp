@@ -6,10 +6,11 @@
 #include <FS.h>
 #include <LittleFS.h>
 #include <SPIFFSEditor.h>
+#include <AsyncJson.h>
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
 
-#define AP_MODE 0
+#define DEBUG 1
 #define MAC_ADDRESS_BYTE 6
 const String deviceName = "SwingFrogWakener";
 
@@ -40,17 +41,9 @@ AsyncWebServer server(80);
 WiFiClient wifiClient;
 PubSubClient mqtt(wifiClient);
 IPAddress broadcastIP(255, 255, 255, 255);
-void loadConfig()
-{
-  File file = LittleFS.open("/config.json", "r+");
-  if (!file)
-    Serial.println("file open failed");
-  // Use https://arduinojson.org/v6/assistant to compute the capacity.
-  StaticJsonDocument<256> doc;
-  DeserializationError error = deserializeJson(doc, file);
-  if (error)
-    Serial.println("Failed to read file, using default configuration");
 
+void refreshState(StaticJsonDocument<512> &doc)
+{
   config.stSSID = doc["stSSID"] | "";
   config.stPASS = doc["stPASS"] | "";
 
@@ -59,18 +52,16 @@ void loadConfig()
   config.mqttEn = doc["mqttEn"] | false;
   config.mqttHost = doc["mqttHost"] | "";
   config.mqttPort = doc["mqttPort"] | 1883;
+  config.mqttUsername = doc["mqttUsername"] | "";
+  config.mqttPass = doc["mqttPass"] | "";
   config.mqttTopic = doc["mqttTopic"] | "";
-
-  file.close();
 }
 
-void saveConfig()
+template <typename T>
+size_t convertState(T *dst)
 {
-  File file = LittleFS.open("/config.json", "w+");
-  if (!file)
-    Serial.println("file open failed");
   // Use https://arduinojson.org/v6/assistant to compute the capacity.
-  StaticJsonDocument<256> doc;
+  StaticJsonDocument<512> doc;
   doc["stSSID"] = config.stSSID;
   doc["stPASS"] = config.stPASS;
 
@@ -79,10 +70,33 @@ void saveConfig()
   doc["mqttEn"] = config.mqttEn;
   doc["mqttHost"] = config.mqttHost;
   doc["mqttPort"] = config.mqttPort;
+  doc["mqttUsername"] = config.mqttUsername;
+  doc["mqttPass"] = config.mqttPass;
   doc["mqttTopic"] = config.mqttTopic;
 
-  if (serializeJson(doc, file) == 0)
-    Serial.println("Failed to write to file");
+  return serializeJson(doc, *dst);
+}
+
+void loadConfig()
+{
+  File file = LittleFS.open("/config.json", "r+");
+  if (!file)
+    Serial.println("file open failed");
+  // Use https://arduinojson.org/v6/assistant to compute the capacity.
+  StaticJsonDocument<512> doc;
+  DeserializationError error = deserializeJson(doc, file);
+  if (error)
+    Serial.println("Failed to read file, using default configuration");
+  refreshState(doc);
+  file.close();
+}
+
+void saveConfig()
+{
+  File file = LittleFS.open("/config.json", "w+");
+  if (!file)
+    Serial.println("file open failed");
+  convertState(&file);
   file.close();
 }
 
@@ -96,11 +110,11 @@ void initAP()
 void connectWiFi()
 {
   WiFi.begin(config.stSSID, config.stPASS);
-
+  WiFi.persistent(false);
   Serial.print("Connecting");
   while (WiFi.status() != WL_CONNECTED)
   {
-    delay(500);
+    delay(2000);
     Serial.print(".");
   }
   Serial.println("Connected, IP address: ");
@@ -112,10 +126,75 @@ void notFound(AsyncWebServerRequest *request)
   request->send(404, "text/plain", "Not found.");
 }
 
+void resConfig(AsyncWebServerRequest *request)
+{
+  AsyncResponseStream *response = request->beginResponseStream("application/json");
+  convertState(response);
+  request->send(response);
+}
+
+AsyncCallbackJsonWebHandler *updateConfigHandlerFactory()
+{
+  return new AsyncCallbackJsonWebHandler("/update-config", [](AsyncWebServerRequest *request, JsonVariant &json)
+                                         {
+                                           StaticJsonDocument<512> doc;
+                                           if (json.is<JsonObject>())
+                                           {
+                                             doc = json.as<JsonObject>();
+                                           }
+                                           refreshState(doc);
+                                           saveConfig();
+                                           request->send(200, "text/plain", "ok");
+                                         });
+}
+
+/**
+ * OTA update handler
+ */ 
+void handleOTAUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
+{
+  Serial.printf("handleOTAUpload: %s, %u, %u, %u\n", filename.c_str(), index, len, final);
+  if (!index)
+  {
+    Serial.printf("Update: %s\n", filename.c_str());
+    Update.runAsync(true);
+    Update.setMD5(request->header("OTA-MD5").c_str());
+    uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+    Serial.printf("Max free Sketch Space: %u\n", maxSketchSpace);
+    if (!Update.begin(maxSketchSpace))
+    { 
+      //start with max available size
+      Update.printError(Serial);
+    }
+  }
+  Update.write(data, len);
+  if(final)
+  {
+    if (Update.end(true))
+    {
+      Serial.printf("Update Success.\nRebooting...\n");
+    }
+    else
+    {
+      Update.printError(Serial);
+    }
+    ESP.restart();
+  }
+}
+
 void initWebServer()
 {
   server.serveStatic("/", LittleFS, "/www").setDefaultFile("index.html");
-
+  server.on("/config", resConfig);
+  //todo add ota interface
+  server.on("/ota", HTTP_POST, [](AsyncWebServerRequest *request)
+  {
+    request->send(200, "text/plain", "ok");
+  }, [&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
+  {
+    handleOTAUpload(request, filename, index, data, len, final);
+  });
+  server.addHandler(updateConfigHandlerFactory());
   server.onNotFound(notFound);
   server.begin();
 }
@@ -212,25 +291,22 @@ void setup()
   Serial.begin(115200);
   LittleFS.begin();
   loadConfig();
-  if (AP_MODE)
+  if (DEBUG)
+  {
     initAP();
-  else
-    connectWiFi();
-
-  initWebServer();
-
+    initWebServer();
+  }
+  connectWiFi();
   if (config.mqttEn)
   {
     initMqtt();
   }
-  /*   byte mac[] = {0xA8, 0xA1, 0x59, 0x46, 0xF7, 0xEF};
-  wakeOnLan(IPAddress(255, 255, 255, 255), mac)); */
 }
 
 void loop()
 {
   // put your main code here, to run repeatedly:
-  if (!mqtt.connected())
+  if (WiFi.status() == WL_CONNECTED && config.mqttEn && !mqtt.connected())
   {
     mqttReconnect();
   }
