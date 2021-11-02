@@ -126,7 +126,7 @@
                             <label for="formFile" class="form-label">OTA firmware</label>
                         </div>
                         <div class="col-9">
-                            <input class="form-control" type="file" id="formFile">
+                            <input class="form-control" type="file" id="formFile" x-on:change="OTAFirmware = $event.target.files[0]">
                         </div>
                     </div>
                     <div class="alert alert-success row offset-1 col-10" role="alert" x-show="OTAStatus">
@@ -157,7 +157,7 @@
                     },
                     OTAStatus: false,
                     successfulInfo: false,
-
+                    OTAFirmware: {},
                     async init() {
                         let res = await axios.get("/config");
                         console.log(res.data);
@@ -181,24 +181,23 @@
              */
             async function updateFirmware() {
                 let formData = new FormData();
-                formData.append('file', document.getElementById('formFile').files[0]);
-                md5File(document.getElementById('formFile').files[0], function (err, md5) {
+                formData.append('Update', OTAFirmware);
+                md5File(OTAFirmware, function (err, md5) {
                     if (err) {
                         console.log(err);
-                    } else {
-                        console.log(md5);
-                        formData.append('md5', md5);
-                        axios.post('/ota', formData, {
-                            headers: {
-                                'Content-Type': 'multipart/form-data',
-                                'OTA-MD5': md5
-                            }
-                        }).then(function (res) {
-                            res.data === 'ok' ? this.OTAStatus = true : this.OTAStatus = false;
-                        }).catch(function (err) {
-                            console.log(err);
-                        });
+                        return;
                     }
+                    console.log(md5);
+                    axios.post('/ota', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                            'OTA-MD5': md5
+                        }
+                    }).then(function (res) {
+                        res.data === 'ok' ? this.OTAStatus = true : this.OTAStatus = false;
+                    }).catch(function (err) {
+                        console.log(err);
+                    });
                 });
             }
         </script>

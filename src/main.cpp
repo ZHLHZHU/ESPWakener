@@ -150,7 +150,7 @@ AsyncCallbackJsonWebHandler *updateConfigHandlerFactory()
 
 /**
  * OTA update handler
- */ 
+ */
 void handleOTAUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
 {
   Serial.printf("handleOTAUpload: %s, %u, %u, %u\n", filename.c_str(), index, len, final);
@@ -162,13 +162,13 @@ void handleOTAUpload(AsyncWebServerRequest *request, String filename, size_t ind
     uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
     Serial.printf("Max free Sketch Space: %u\n", maxSketchSpace);
     if (!Update.begin(maxSketchSpace))
-    { 
+    {
       //start with max available size
       Update.printError(Serial);
     }
   }
   Update.write(data, len);
-  if(final)
+  if (final)
   {
     if (Update.end(true))
     {
@@ -187,13 +187,13 @@ void initWebServer()
   server.serveStatic("/", LittleFS, "/www").setDefaultFile("index.html");
   server.on("/config", resConfig);
   //todo add ota interface
-  server.on("/ota", HTTP_POST, [](AsyncWebServerRequest *request)
-  {
-    request->send(200, "text/plain", "ok");
-  }, [&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
-  {
-    handleOTAUpload(request, filename, index, data, len, final);
-  });
+  server.on(
+      "/ota", HTTP_POST, [](AsyncWebServerRequest *request)
+      { request->send(200, "text/plain", "ok"); },
+      [&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
+      {
+        handleOTAUpload(request, filename, index, data, len, final);
+      });
   server.addHandler(updateConfigHandlerFactory());
   server.onNotFound(notFound);
   server.begin();
@@ -291,6 +291,7 @@ void setup()
   Serial.begin(115200);
   LittleFS.begin();
   loadConfig();
+  pinMode(13, INPUT_PULLUP);
   if (DEBUG)
   {
     initAP();
@@ -309,6 +310,11 @@ void loop()
   if (WiFi.status() == WL_CONNECTED && config.mqttEn && !mqtt.connected())
   {
     mqttReconnect();
+  }
+  int pinState = digitalRead(13);
+  if (pinState == LOW)
+  {
+    Serial.println("button pressed");
   }
   mqtt.loop();
   delay(1000);
