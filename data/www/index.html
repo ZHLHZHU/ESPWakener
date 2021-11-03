@@ -5,8 +5,9 @@
     <!-- <link rel="stylesheet" href="style/pure-min.css"> -->
     <link href="/style/bootstrap.min.css" rel="stylesheet">
     <script src="/js/bootstrap.bundle.min.js"></script>
-    <script defer src="js/alpinejs.min.js"></script>
-    <script src="js/axios.min.js"></script>
+    <script defer src="/js/alpinejs.min.js"></script>
+    <script src="/js/axios.min.js"></script>
+    <script src="/js/md5.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wakener Config</title>
@@ -126,7 +127,7 @@
                             <label for="formFile" class="form-label">OTA firmware</label>
                         </div>
                         <div class="col-9">
-                            <input class="form-control" type="file" id="formFile" x-on:change="OTAFirmware = $event.target.files[0]">
+                            <input class="form-control" type="file"  accept=".bin" id="formFile" x-on:change="OTAFirmware = $event.target.files[0]">
                         </div>
                     </div>
                     <div class="alert alert-success row offset-1 col-10" role="alert" x-show="OTAStatus">
@@ -134,7 +135,7 @@
                     </div>
 
                     <div class="row offset-1 col-10">
-                        <button class="btn btn-success" type="button" x-on:click="submit">Update!</button>
+                        <button class="btn btn-success" type="button" x-on:click="updateFirmware">Update!</button>
                     </div>
 
 
@@ -165,7 +166,7 @@
                     }
                 }
             }
-
+            
             /**
              * submit config
              */ 
@@ -181,24 +182,17 @@
              */
             async function updateFirmware() {
                 let formData = new FormData();
-                formData.append('Update', OTAFirmware);
-                md5File(OTAFirmware, function (err, md5) {
-                    if (err) {
-                        console.log(err);
-                        return;
+                formData.append('Update', this.OTAFirmware);
+                axios.post('/ota', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
                     }
-                    console.log(md5);
-                    axios.post('/ota', formData, {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                            'OTA-MD5': md5
-                        }
-                    }).then(function (res) {
-                        res.data === 'ok' ? this.OTAStatus = true : this.OTAStatus = false;
-                    }).catch(function (err) {
-                        console.log(err);
-                    });
-                });
+                }).then(res => {
+                    console.log(res);
+                    this.OTAStatus = true;
+                }).catch(err => {
+                    console.log(err);
+                })
             }
         </script>
     </div>

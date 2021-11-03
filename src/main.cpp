@@ -12,6 +12,7 @@
 
 #define DEBUG 1
 #define MAC_ADDRESS_BYTE 6
+#define CONFIG_SWITCH_PIN 13
 const String deviceName = "SwingFrogWakener";
 
 struct Config
@@ -49,7 +50,6 @@ void refreshState(StaticJsonDocument<512> &doc)
 
   config.wolPort = doc["wolPort"] | 9;
 
-  config.mqttEn = doc["mqttEn"] | false;
   config.mqttHost = doc["mqttHost"] | "";
   config.mqttPort = doc["mqttPort"] | 1883;
   config.mqttUsername = doc["mqttUsername"] | "";
@@ -67,7 +67,6 @@ size_t convertState(T *dst)
 
   doc["wolPort"] = config.wolPort;
 
-  doc["mqttEn"] = config.mqttEn;
   doc["mqttHost"] = config.mqttHost;
   doc["mqttPort"] = config.mqttPort;
   doc["mqttUsername"] = config.mqttUsername;
@@ -153,12 +152,22 @@ AsyncCallbackJsonWebHandler *updateConfigHandlerFactory()
  */
 void handleOTAUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
 {
-  Serial.printf("handleOTAUpload: %s, %u, %u, %u\n", filename.c_str(), index, len, final);
+  // Serial.printf("handleOTAUpload: %s, %u, %u, %u\n", filename.c_str(), index, len, final);
   if (!index)
   {
     Serial.printf("Update: %s\n", filename.c_str());
+    if (!filename || !filename.endsWith(".bin"))
+    {
+      request->send(400, "text/plain", "Invalid firmware");
+      return;
+    }
+    uint8_t fileNemeLen = filename.length();
+    char *md5 = new char[fileNemeLen + 1];
+    memset(md5, 0, fileNemeLen + 1);
+    memmove(md5, filename.c_str() , fileNemeLen - 4);
     Update.runAsync(true);
-    Update.setMD5(request->header("OTA-MD5").c_str());
+    //todo check md5
+    // Update.setMD5(request->header("OTA-MD5").c_str());
     uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
     Serial.printf("Max free Sketch Space: %u\n", maxSketchSpace);
     if (!Update.begin(maxSketchSpace))
@@ -173,12 +182,13 @@ void handleOTAUpload(AsyncWebServerRequest *request, String filename, size_t ind
     if (Update.end(true))
     {
       Serial.printf("Update Success.\nRebooting...\n");
+      request->send(200, "text/plain", "ok");
+      ESP.restart();
     }
     else
     {
       Update.printError(Serial);
     }
-    ESP.restart();
   }
 }
 
@@ -291,16 +301,20 @@ void setup()
   Serial.begin(115200);
   LittleFS.begin();
   loadConfig();
-  pinMode(13, INPUT_PULLUP);
-  if (DEBUG)
+  pinMode(CONFIG_SWITCH_PIN, INPUT_PULLUP);
+  bool configMode = digitalRead(CONFIG_SWITCH_PIN) == LOW;
+  if (configMode)
   {
     initAP();
     initWebServer();
   }
-  connectWiFi();
-  if (config.mqttEn)
+  else
   {
-    initMqtt();
+    connectWiFi();
+    if (config.mqttHost.length() > 0)
+    {
+      initMqtt();
+    }
   }
 }
 
@@ -310,11 +324,6 @@ void loop()
   if (WiFi.status() == WL_CONNECTED && config.mqttEn && !mqtt.connected())
   {
     mqttReconnect();
-  }
-  int pinState = digitalRead(13);
-  if (pinState == LOW)
-  {
-    Serial.println("button pressed");
   }
   mqtt.loop();
   delay(1000);
