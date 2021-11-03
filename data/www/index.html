@@ -7,7 +7,6 @@
     <script src="/js/bootstrap.bundle.min.js"></script>
     <script defer src="/js/alpinejs.min.js"></script>
     <script src="/js/axios.min.js"></script>
-    <script src="/js/md5.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wakener Config</title>
@@ -63,10 +62,10 @@
                                 <label for="aligned-wol-port" class="form-label">MQTT Enable</label>
                             </div>
                             <div class="col-9">
-                                <input type="checkbox" id="aligned-mqtt-switch" x-model="form.mqttEn">
+                                <input type="checkbox" id="aligned-mqtt-switch" x-model="mqttEn">
                             </div>
                         </div>
-                        <div x-show="form.mqttEn">
+                        <div x-show="mqttEn">
                             <div class="row align-items-center">
                                 <div class="col-3">
                                     <label for="aligned-mqtt-host" class="form-label">MQTT Host</label>
@@ -127,7 +126,8 @@
                             <label for="formFile" class="form-label">OTA firmware</label>
                         </div>
                         <div class="col-9">
-                            <input class="form-control" type="file"  accept=".bin" id="formFile" x-on:change="OTAFirmware = $event.target.files[0]">
+                            <input class="form-control" type="file" accept=".bin" id="formFile"
+                                x-on:change="OTAFirmware = $event.target.files[0]">
                         </div>
                     </div>
                     <div class="alert alert-success row offset-1 col-10" role="alert" x-show="OTAStatus">
@@ -149,7 +149,6 @@
                         stSSID: '',
                         stPASS: '',
                         wolPort: 9,
-                        mqttEn: false,
                         mqttHost: '',
                         mqttPort: '',
                         mqttUsername: '',
@@ -159,17 +158,19 @@
                     OTAStatus: false,
                     successfulInfo: false,
                     OTAFirmware: {},
+                    mqttEn: true,
                     async init() {
-                        let res = await axios.get("/config");
+                        let res = await axios.get("//192.168.8.1/config");
                         console.log(res.data);
                         this.form = res.data
+                        this.mqttEn = this.form.mqttHost != ''
                     }
                 }
             }
-            
+
             /**
              * submit config
-             */ 
+             */
             async function submit() {
                 console.log(this.form);
                 let res = await axios.post("/update-config", this.form)

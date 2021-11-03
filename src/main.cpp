@@ -23,8 +23,6 @@ struct Config
   String stPASS;
   // wol target port
   uint16_t wolPort;
-  //mqtt enable flag
-  boolean mqttEn;
   // mqtt uri
   String mqttHost;
   // mqtt port
@@ -164,10 +162,9 @@ void handleOTAUpload(AsyncWebServerRequest *request, String filename, size_t ind
     uint8_t fileNemeLen = filename.length();
     char *md5 = new char[fileNemeLen + 1];
     memset(md5, 0, fileNemeLen + 1);
-    memmove(md5, filename.c_str() , fileNemeLen - 4);
+    memmove(md5, filename.c_str(), fileNemeLen - 4);
     Update.runAsync(true);
-    //todo check md5
-    // Update.setMD5(request->header("OTA-MD5").c_str());
+    Update.setMD5(md5);
     uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
     Serial.printf("Max free Sketch Space: %u\n", maxSketchSpace);
     if (!Update.begin(maxSketchSpace))
@@ -179,16 +176,14 @@ void handleOTAUpload(AsyncWebServerRequest *request, String filename, size_t ind
   Update.write(data, len);
   if (final)
   {
+    AsyncWebServerResponse *response = request->beginResponse(302, "text/plain", "Please wait while the device reboots");
+    response->addHeader("Refresh", "20");
+    response->addHeader("Location", "/");
+    request->send(response);
     if (Update.end(true))
-    {
       Serial.printf("Update Success.\nRebooting...\n");
-      request->send(200, "text/plain", "ok");
-      ESP.restart();
-    }
     else
-    {
       Update.printError(Serial);
-    }
   }
 }
 
@@ -198,9 +193,8 @@ void initWebServer()
   server.on("/config", resConfig);
   //todo add ota interface
   server.on(
-      "/ota", HTTP_POST, [](AsyncWebServerRequest *request)
-      { request->send(200, "text/plain", "ok"); },
-      [&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
+      "/ota", HTTP_POST, [](AsyncWebServerRequest *request) {},
+      [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
       {
         handleOTAUpload(request, filename, index, data, len, final);
       });
@@ -301,6 +295,7 @@ void setup()
   Serial.begin(115200);
   LittleFS.begin();
   loadConfig();
+  // init gpio
   pinMode(CONFIG_SWITCH_PIN, INPUT_PULLUP);
   bool configMode = digitalRead(CONFIG_SWITCH_PIN) == LOW;
   if (configMode)
@@ -321,7 +316,7 @@ void setup()
 void loop()
 {
   // put your main code here, to run repeatedly:
-  if (WiFi.status() == WL_CONNECTED && config.mqttEn && !mqtt.connected())
+  if (WiFi.status() == WL_CONNECTED && !config.mqttHost.isEmpty() && !mqtt.connected())
   {
     mqttReconnect();
   }
