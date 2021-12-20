@@ -1,5 +1,0 @@
-(fp_lib_table
-  (lib (name ESP8266)(type KiCad)(uri C:/Users/LH/Downloads/kicad-ESP8266/ESP8266.pretty)(options "")(descr ""))
-  (lib (name ESP8266_Wakener)(type KiCad)(uri ${KIPRJMOD}/ESP8266_Wakener.pretty)(options "")(descr ""))
-  (lib (name Logo)(type KiCad)(uri C:/Users/LH/Documents/PlatformIO/Projects/ESP8266_Wakener/pcb/ESP8266_Wakener/logo)(options "")(descr ""))
-)

@@ -1,0 +1,5 @@
+(sym_lib_table
+  (lib (name ESP8266)(type Legacy)(uri /Users/lh/Documents/PlatformIO/Projects/ESP8266_Wakener/pcb/ESP8266_Wakener/lib/kicad-ESP8266/ESP8266.lib)(options "")(descr ""))
+  (lib (name LDO)(type Legacy)(uri /Users/lh/Documents/PlatformIO/Projects/ESP8266_Wakener/pcb/ESP8266_Wakener/lib/RT9013-33GB/RT9013-33GB.lib)(options "")(descr ""))
+  (lib (name Slip_Switch)(type Legacy)(uri /Users/lh/Documents/PlatformIO/Projects/ESP8266_Wakener/pcb/ESP8266_Wakener/lib/slip-switch/SlipSwitch_MSK-12D19_1P2T.lib)(options "")(descr ""))
+)

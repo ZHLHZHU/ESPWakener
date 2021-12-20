@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name ESP8266)(type KiCad)(uri /Users/lh/Documents/PlatformIO/Projects/ESP8266_Wakener/pcb/ESP8266_Wakener/slip_switch.pretty)(options "")(descr "")(disabled))
+  (lib (name Slip-Switch)(type KiCad)(uri /Users/lh/Documents/PlatformIO/Projects/ESP8266_Wakener/pcb/ESP8266_Wakener/lib/slip-switch/slip_switch.pretty)(options "")(descr ""))
+)

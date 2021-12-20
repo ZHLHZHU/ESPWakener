@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- <link rel="stylesheet" href="style/pure-min.css"> -->
+    <link href="/style/bootstrap.min.css" rel="stylesheet">
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script defer src="/js/alpinejs.min.js"></script>
+    <script src="/js/axios.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wakener Config</title>
+</head>
+
+<body class="container">
+<div class="row" x-data="data()">
+    <div class="col-md-11 offset-md-1 col-lg-7 offset-lg-2">
+        <nav>
+            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                <button class="nav-link active" id="nav-doc-tab" data-bs-toggle="tab"
+                        data-bs-target="#nav-doc" type="button" role="tab" aria-controls="nav-doc"
+                        aria-selected="true">Doc
+                </button>
+                <button class="nav-link" id="nav-config-tab" data-bs-toggle="tab"
+                        data-bs-target="#nav-config" type="button" role="tab" aria-controls="nav-config"
+                        aria-selected="true">Config
+                </button>
+            </div>
+        </nav>
+        <div class="tab-content" id="nav-tabContent">
+            <div class="tab-pane fade show mb-3" id="nav-config" role="tabpanel"
+                 aria-labelledby="nav-config-tab">
+                <form style="Margin-top: 15px">
+                    <div class="row align-items-center">
+                        <div class="col-3">
+                            <label for="aligned-name" class="form-label">WiFi SSID</label>
+                        </div>
+                        <div class="col-9">
+                            <input class="form-control" type="text" id="aligned-name" placeholder="WiFi SSID"
+                                   x-model="form.stSSID"/>
+                        </div>
+                    </div>
+
+                    <div class="row align-items-center">
+                        <div class="col-3">
+                            <label for="aligned-password" class="form-label">WiFi Password</label>
+                        </div>
+                        <div class="col-9">
+                            <input class="form-control" type="password" id="aligned-password"
+                                   placeholder="WiFi Password" x-model="form.stPASS"/>
+                        </div>
+
+                    </div>
+                    <div class="row align-items-center">
+                        <div class="col-3">
+                            <label for="aligned-wol-port" class="form-label">WOL Port</label>
+                        </div>
+                        <div class="col-9">
+                            <input class="form-control" type="number" id="aligned-wol-port" x-model="form.wolPort"
+                                   placeholder="9"/>
+                        </div>
+                    </div>
+                    <div class="row align-items-center">
+                        <div class="col-3">
+                            <label for="aligned-wol-port" class="form-label">MQTT Enable</label>
+                        </div>
+                        <div class="col-9">
+                            <input type="checkbox" id="aligned-mqtt-switch" x-model="mqttEn">
+                        </div>
+                    </div>
+                    <div x-show="mqttEn">
+                        <div class="row align-items-center">
+                            <div class="col-3">
+                                <label for="aligned-mqtt-host" class="form-label">MQTT Host</label>
+                            </div>
+                            <div class="col-9">
+                                <input class="form-control" type="text" id="aligned-mqtt-host"
+                                       placeholder="MQTT Host" x-model="form.mqttHost"/>
+                            </div>
+                        </div>
+                        <div class="row align-items-center">
+                            <div class="col-3">
+                                <label for="aligned-mqtt-port" class="form-label">MQTT Port</label>
+                            </div>
+                            <div class="col-9">
+                                <input class="form-control" type="number" id="aligned-mqtt-port"
+                                       placeholder="MQTT Port" x-model.number="form.mqttPort"/>
+                            </div>
+                        </div>
+                        <div class="row align-items-center">
+                            <div class="col-3">
+                                <label for="aligned-mqtt-username" class="form-label">MQTT Username</label>
+                            </div>
+                            <div class="col-9">
+                                <input class="form-control" type="text" id="aligned-mqtt-username"
+                                       placeholder="MQTT Username" x-model="form.mqttUsername"/>
+                            </div>
+                        </div>
+                        <div class="row align-items-center">
+                            <div class="col-3">
+                                <label for="aligned-mqtt-password" class="form-label">MQTT Password</label>
+                            </div>
+                            <div class="col-9">
+                                <input class="form-control" type="password" id="aligned-mqtt-password"
+                                       placeholder="MQTT Password" x-model="form.mqttPass"/>
+                            </div>
+                        </div>
+                        <div class="row align-items-center">
+                            <div class="col-3">
+                                <label for="aligned-mqtt-topic" class="form-label">MQTT Topic</label>
+                            </div>
+                            <div class="col-9">
+                                <input class="form-control" type="text" id="aligned-mqtt-topic"
+                                       placeholder="MQTT Topic" x-model="form.mqttTopic"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-success row offset-1 col-10" role="alert" x-show="successfulInfo">
+                        Configuration update succeeded, please reboot to work.
+                    </div>
+                    <div class="row offset-1 col-10">
+                        <button class="btn btn-primary" type="button" x-on:click="submit">Submit</button>
+                    </div>
+                </form>
+            </div>
+            <div class="tab-pane fade show active mb-3" id="nav-doc" role="tabpanel"
+                 aria-labelledby="nav-doc-tab">
+                <div class="card" style="margin: 5px">
+                    <h5 class="card-header">简介</h5>
+                    <div class="card-body">
+                        <p class="card-text">EspWakener是一个基于Wake-on-LAN协议的网络唤醒器，通过MQTT协议进行控制。</p>
+                    </div>
+                </div>
+                <div class="card" style="margin: 5px">
+                    <h5 class="card-header">配置说明</h5>
+                    <div class="card-body">
+                        <ul>
+                        <li class="card-text">把开关拨到"ON"，通电（顺序不能乱）。连上Wakener发出的热点，进入192.168.8.1（你都看到本页面了，肯定已经完成这些步骤）。</li>
+                        <li class="card-text">进入Config页签，配置好WIFI名和密码、WOL的端口（默认9）。</li>
+                        <li class="card-text">打开MQTT开关，填入MQTT连接（只支持mqtt://协议，不支持TLS和WS），填入Topic。MQTT用户名和密码如果没有可以忽略。</li>
+                        <li class="card-text">点击保存，把开关拨到"1"，断电，通电。（拨开关和断电的顺序任意，因为本设备只会根据通电瞬间的开关状态来判断是否进入配置模式）。</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card" style="margin: 5px">
+                    <h5 class="card-header">协议</h5>
+                    <div class="card-body">
+                        <h5 class="card-title">Wakener上线</h5>
+                        <p class="card-text">
+                            当Wakener成功连接Mqtt服务器后，会广播一条自身状态的信息
+                        </p>
+                        <pre>
+{
+    "action": "join",
+    "sender": "SwingFrogWakener",
+    "deviceName": "SwingFrogWakener",
+    "ip": "192.168.1.188",
+    "ssid": "WIFI_NAME",
+    "rssi": -47,
+    "version": "2.0.0"
+}
+</pre>
+                        <h5 class="card-title">请求唤醒</h5>
+                        <p class="card-text">
+                            向Wakener所配置的Topic发送以下指令，Wakener将会在所在局域网广播唤醒包<br>
+                            mac地址分隔符支持 ':' 和 '-'
+                        </p>
+                        <pre>
+{
+    "action": "wake",
+    "mac": "a8:a9:59:30:f7:ee"
+}
+</pre>
+                        <h5 class="card-title">请求设备状态</h5>
+                        <p class="card-text">
+                            向Wakener所配置的Topic发送以下指令，将会返回Wakener当前状态信息
+                        </p>
+                        <pre>
+{
+    "action": "info"
+}
+                        </pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="offset-10">version: <span x-text="firmwareVersion"></span> © <a
+                    href="https://github.com/ZHLHZHU">LH</a></div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        function data() {
+            return {
+                form: {
+                    stSSID: '',
+                    stPASS: '',
+                    wolPort: 9,
+                    mqttHost: '',
+                    mqttPort: '',
+                    mqttUsername: '',
+                    mqttPass: '',
+                    mqttTopic: 0
+                },
+                successfulInfo: false,
+                mqttEn: true,
+                firmwareVersion: '3.14',
+                async init() {
+                    let res = await axios.get("/config");
+                    this.form = res.data
+                    this.mqttEn = this.form.mqttHost !== ''
+                    let version = await axios.get("/version")
+                    if (version.data.code === 200) {
+                        this.firmwareVersion = version.data.firmwareVersion
+                    }
+                }
+            }
+        }
+
+        /**
+         * submit config
+         */
+        async function submit() {
+            console.log(this.form);
+            let res = await axios.post("/update-config", this.form)
+            if (res.data === 'ok') {
+                this.successfulInfo = true;
+            }
+        }
+    </script>
+</div>
+</body>
+<style>
+    .row {
+        margin-top: 10px;
+    }
+</style>
+
+</html>
